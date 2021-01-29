@@ -1,3 +1,3 @@
 # Bachelorarbeit
 
-This repository contains the code of my bachelorthesis for my Data Science study program.
+Dieses Repo enthält den schriftlichen und praktischen Teil meiner Bachelorarbeit meines Data Science Studiums.
