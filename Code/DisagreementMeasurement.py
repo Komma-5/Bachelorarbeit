@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import re
 
+"""
+Methods to manually calculate disagreement measurements
+"""
 
 def classifier_dist_matr(classifier1, classifier2, struc_seq_pairs, pre_div_path):
     """
@@ -60,7 +63,6 @@ def calc_disagreements(classifiers, relative):
     rel = 1
     if relative:
         rel = n
-
     for i in range(0, m):
         for j in range(0, m):
             if i == j:

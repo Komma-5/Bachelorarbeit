@@ -3,6 +3,11 @@ import pandas as pd
 import numpy as np
 from random import sample
 
+"""
+Methods to used pre calculation.
+"""
+
+
 def sort(encoding_type, filename):
     """
     sorts encodings by sequence number, given encoding in 'data/data2' and returns them.
@@ -147,6 +152,10 @@ def delete_first_row():
 
 
 def indices_for_ncv(outer_cv, path):
+    """
+    Genereates indices for cross validation of given sequences. Saves it to given path.
+    :return:
+    """
     y = pd.read_csv('data/amp/sequence_based/aac.csv').y
     n = len(y)
     all = range(n)
@@ -161,11 +170,20 @@ def indices_for_ncv(outer_cv, path):
     exit()
 
 def import_fold_indices(filename, path):
+    """
+    Import indices from CSV to be used for model training and testing.
+    return: fold_indices
+    """
     fold_indices = pd.read_csv(path+'test_set_indices/'+filename).swapaxes(0,1).values
     fold_indices= fold_indices.tolist()[0]
     return fold_indices
 
 def seq_struc_dist_matr():
+    """
+    creates sequence and structured matrix given those two matrices in seperated document.
+    Saves it as CSV. 
+    :return:
+    """
     diversity_matrix = pd.read_csv("data/encoding_distances/ace_vaxin_diversity_all_vs_all.csv")
     sequence = os.listdir("data/sequence_based")
     struc = os.listdir("data/structure_based")
@@ -185,40 +203,3 @@ def seq_struc_dist_matr():
     diversity_matrix.drop(dele_col, inplace=True, axis=1)
     print(diversity_matrix)
     exit()
-
-def single_enc_dist_matr(dataset, enco):
-    diversity_matrix = pd.read_csv("data/"+dataset+"/encoding_distances/all_vs_all_div.csv")
-    #34
-    if enco == "seq":
-        encos = os.listdir("data/"+dataset+"/structure_based")
-    elif enco=="struc":
-        encos = os.listdir("data/"+dataset+"/sequence_based")
-    encos =[re.sub("\.csv", "", x) for x in encos]
-    dele_row =[]
-    dele_col = []
-    for i in range(1,len(diversity_matrix.iloc[:, 0])):
-        #print(diversity_matrix.iloc[i, 0])
-        if str(diversity_matrix.iloc[i,0]) in encos:
-            print(diversity_matrix.iloc[i, 0])
-            dele_row.append(i)
-            col = diversity_matrix.columns[i]
-            dele_col.append(col)
-    print(len(encos))
-    print(len(dele_row))
-    df = diversity_matrix.iloc[dele_row,:]
-    df.index= diversity_matrix.columns[dele_row]
-    print(df)
-    print([x for x in encos if x not in diversity_matrix.columns[dele_row]])
-    diversity_matrix.drop(dele_row, inplace=True)
-    diversity_matrix.drop(dele_col, inplace=True, axis=1)
-    #print(diversity_matrix)
-    exit()
-
-"""
-def testing():
-    df = pd.read_csv('data/sequence_based/aac.csv').y
-    top = df.groupby('gen').apply(lambda group: list(group.astype(float).nlargest(2)))
-    N_ENCODINGS= 4
-    encoding_counts = pd.Series.value_counts(df[[('encoding{}'.format(i)) for i in range(N_ENCODINGS) ] ].values.ravel())
-
-"""

@@ -5,6 +5,10 @@ from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_sc
 import Ensemble
 import pandas as pd
 
+"""
+Methods for evaluation of final indiviual.
+"""
+
 def convert_to_ensemble(row):
     individual = []
     for i in range(N_ENCODINGS):
@@ -21,6 +25,10 @@ def convert_to_ensemble(row):
     return Ensemble(individual)
 
 def final_eval(y_test, predictions):
+    """
+    Calcualte and return different performance metrics.
+    return: scores
+    """
     scores = []
     scores.append(f1_score(y_test.values, predictions))
     scores.append(accuracy_score(y_test.values, predictions))

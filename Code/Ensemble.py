@@ -18,6 +18,9 @@ import random
 import re
 
 
+"""
+Ensemble Class - evaluates individual.
+"""
 
 class Ensemble:
     KNOWN_CLASSIFIERS = {'rf':RandomForestClassifier, 'svm':SVC}
@@ -228,6 +231,12 @@ class Ensemble:
             return PME.final_eval(y_test, x_pred) + [div_frac, final_diversity, encoding_names, meta_cls,[sclf]]
 
     def build_pipe_and_data(self):
+
+        """
+        Buils dataframe and dependencies for stacking.
+        :return: data_frame, pipelines, models, classifier_names, encoding_names
+        """
+
         data_frame = None
         pipelines = []
         models = []
@@ -285,6 +294,11 @@ class Ensemble:
             return self.div_frac[0]
         except TypeError:
             return self.div_frac
+
+
+"""
+MAIN
+"""
 
 if __name__=='__main__':
     e = Ensemble([{'cls':'rf','encoding':'ifeature_aaindexencoder_aaindex-NAKH900112_interpol-33.csv','params': {'n_estimators':88}},

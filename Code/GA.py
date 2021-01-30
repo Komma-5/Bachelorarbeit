@@ -28,6 +28,10 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
 class GA:
+    """
+    Genetic Algorithm
+    """
+
     def __init__(self, test_indices = [], fold_indices = None, **kwargs):
 
         self.toolbox = base.Toolbox()
@@ -42,7 +46,7 @@ class GA:
             self.id = ""
         else:
             self.id = re.sub("\.csv", "", self.kwargs.get("import_ind"))+'_'
-        self.gens = args.__dict__.get('gens')
+        self.gens = args.gens
 
     def setup(self):
         """
@@ -68,7 +72,6 @@ class GA:
         structure_encodings = os.listdir("./data/"+self.kwargs.get('dataset')+"structure_based")
         self.toolbox.register("attr_sequence_encoding", choice, sequence_encodings)
         self.toolbox.register("attr_structure_encoding", choice, structure_encodings)
-
 
         self.toolbox.register("attr_structure_RF", lambda: {'cls': 'rf', 'encoding': self.toolbox.attr_structure_encoding(), 'encoding_type':'structure',
                                                   'params': {'n_estimators': self.toolbox.attr_rf_n()}})
@@ -169,7 +172,7 @@ class GA:
         :return: encoding of the mutated encoding
         """
         args = argparser()
-        base_path=args.__dict__.get('data_path')+args.__dict__.get('dataset')
+        base_path=args.data_path+args.dataset
         enc_type = ind["encoding_type"]
 
         if enc_type=='structure':
@@ -275,13 +278,8 @@ class GA:
             else:
                 #self.all_pops.append(list(zip(offspring, [(i.fitness.values[0],i.fitness.values[1]) for i in offspring])))
                 pop = list(zip(offspring, [(indi.fitness.values[0],indi.fitness.values[1]) for indi in offspring]))
-
-
-
             self.write_pop(pop, self.g)
-
         self.final_report(self.get_best_model_data())
-
 
     def get_best_model_data(self):
         sorted_by_f1 = sorted(self.classifier_data, key=operator.itemgetter(0))
@@ -298,11 +296,14 @@ class GA:
         total_survivors = int(n * frac_survivors)
         copy_iterations = int(n / total_survivors)
         total_fill_up_individuals = n - copy_iterations * total_survivors
-        offspring = self.toolbox.select(self.pop, total_survivors) * copy_iterations + self.toolbox.select(self.pop,
-                                                                                                           total_fill_up_individuals)
+        offspring = self.toolbox.select(self.pop, total_survivors) * copy_iterations + self.toolbox.select(self.pop,                                                                                    total_fill_up_individuals)
         return offspring
 
     def save_meta_cls(self,g ,cls, encodings):
+        """
+        Save meta classfier (is used after every generation).
+        :return:
+        """
         filename=self.kwargs.get('savepath')+self.id+"meta_cls.csv"
         file_exists = False
         if os.path.exists(filename):
@@ -345,6 +346,10 @@ class GA:
         return df
 
     def write_pop(self,pop,gen):
+        """
+        Saves population data (is used after every generation).
+        :return:
+        """
         cols = ['fitness'] + ['cls{}'.format(j) for j in range(self.kwargs.get('n_classifiers'))] + \
                ['RF_n{}'.format(j) for j in range(self.kwargs.get('n_classifiers'))] + \
                ['SVM_C{}'.format(j) for j in range(self.kwargs.get('n_classifiers'))] + \
@@ -414,11 +419,10 @@ class GA:
             print('One-time Fitness-score:', best_ind.fitness.values[0])
             print('One-time diversity:', best_ind.fitness.values[1])
 
-
 def signal_handler():
     """
     Handles system interrupts.
-    Specifically if the script is terminated [Ctrl + C], the results are saved.
+    Specifically if the script is terminated [Ctrl + C].
     :param signal:
     :param frame:
     :return:
@@ -435,9 +439,9 @@ def argparser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-runtime', action="store", type=int, default=20, help='Runtime in hours')
     parser.add_argument('-gens', action="store", type=int, default=-1, help='Number of maximum generations')
-    parser.add_argument('-n_classifiers', action="store", type=int, default=4, help='Number of classifier_data in ensemble. Must be even, since the individual is a composition of structure and sequence based classifier_data.')
-    parser.add_argument('-n_structure_classifiers', action="store", type=int, default=2, help='Number of structure classifier_data in ensemble')
-    parser.add_argument('-n_sequence_classifiers', action="store", type=int, default=2, help='Number of sequence classifier_data in ensemble')
+    parser.add_argument('-n_classifiers', action="store", type=int, default=4, help='Number of classifiers in ensemble. Must be even, since the individual is a composition of structure and sequence based classifier_data.')
+    parser.add_argument('-n_structure_classifiers', action="store", type=int, default=2, help='Number of structure classifiers in ensemble')
+    parser.add_argument('-n_sequence_classifiers', action="store", type=int, default=2, help='Number of sequence classifiers in ensemble')
     parser.add_argument('-savepath', action="store", type=str, default='Results/', help='Path for saving results and performance')
     parser.add_argument('-data_path', action="store", type=str, default='data/', help='Path for saving results and performance')
     parser.add_argument('-dataset', action="store", type=str, default='amp/', help='Path to dataset folder')
@@ -448,43 +452,50 @@ def argparser():
     parser.add_argument('-train_fit_compo', action="store_true", default=False, help='If true, the GA will try to learn the best fitness composition of fitness and f1 score. Else: use fixed "div_frac" diversity composition. Default: False.')
     parser.add_argument('-pre_div', action="store_true", default=False, help='If true, diversity values are taken from a precomputed disagreement matrix.')
     parser.add_argument('-pre_div_path', action="store", type=str, default='seq_vs_struc_div.csv', help='Path to diversity matrix. Only use with \'-pre_div\' argument.')
-    parser.add_argument('-stacking', action="store_true", default=False, help='If true, the ensemble will be combinded through a meta classifier_data (stacking). Else: mean. Default: false.')
-    parser.add_argument('-stacking_cv', action="store_true", default=False, help='If true, the ensemble will be combinded through a meta classifier_data (stacking) using cross validation. Else: mean. Default: false.')
+    parser.add_argument('-stacking', action="store_true", default=False, help='If true, the ensemble will be combinded through a meta classifier (stacking). Else: mean. Default: false.')
+    parser.add_argument('-stacking_cv', action="store_true", default=False, help='If true, the ensemble will be combinded through a meta classifier (stacking) using cross validation. Else: mean. Default: false.')
     parser.add_argument('-fixed_meta_clf', action='store', type=int, default=None, help='Indexed of fixed meta classifier for stacking')
     parser.add_argument('-inner_train_size', action='store', type=float, default=0.8, help='Size of training set size. e.g. 0.9 = 90% of whole dataset. default: 0.8')
     parser.add_argument('-outer_cv', action='store', type=int, default=1, help='Number of folds of outer CV (for Nested CV). Default: 1=No NCV')
     parser.add_argument('-import_ind', action="store",type=str, default=None, help='If set, testset indices will be imported_fold from data/test_set_indices/ import_ind. Default: false.')
     parser.add_argument('-enco_method', action="store",type=str, default=None, help='Sets construction of encoding methods used in ensemble. If \'None\' (default): structured and sequence based; if \'struc\' only structure based; if \'seq\' only sequence based encodings.')
-    parser.add_argument('-struc_seq_pairs', action="store", type=bool, default=True, help='If true, there\'s one sequence classifier_data for every structure classifier_data in an ensemble (structure,sequence pairs).')
+    parser.add_argument('-struc_seq_pairs', action="store", type=bool, default=True, help='If true, there\'s one sequence classifier for every structure classifier in an ensemble (structure,sequence pairs).')
     parser.add_argument('-save_m', action="store_true", default=False, help='If true, the fitted models will be saved as ".joblib".')
     parser.add_argument('-ncvEval', action="store_true", default=False)
 
     return parser.parse_args()
 
-def eval_ncv():
-
-    NCV.final_ncv_eval(3, 'Results/NoStacking/Run7/', 'fitted_models/', 'data/imo/test_set_indices/',
+def eval_ncv(fold = 3):
+    """
+    Evaluate data if (3fold) Nested Cross Validation was used. 
+    :return:
+    """
+    NCV.final_ncv_eval(fold, 'Results/NoStacking/Run7/', 'fitted_models/', 'data/imo/test_set_indices/',
                        [['ssec.csv', 'waac_aaindex_BUNA790103.csv', 'delaunay_average_distance.csv', 'fft_aaindex_GEOR030103.csv'],
                         ['electrostatic_hull_0.csv', 'fft_aaindex_QIAN880102.csv', 'electrostatic_hull_9.csv', 'dde.csv'],
                         ['sseb.csv', 'dist_freq_dn_10_dc_5.csv', 'ta.csv', 'ngram_a2_20.csv']],
                        'final_eval_ncv.csv')
 
+"""
+MAIN
+"""
+
 if __name__ == '__main__':
     args = argparser()
 
-    if args.__dict__.get('ncvEval'):
+    if args.ncvEval:
         eval_ncv()
 
     signal.signal(signal.SIGINT, signal_handler)
     forever = threading.Event()
-    path = args.__dict__.get('data_path')+args.__dict__.get('dataset')
+    path = args.data_path+args.dataset
     y = pd.read_csv(path+'sequence_based/aac.csv').y
     print('PARAMETERS')
     for key in args.__dict__.keys():
         print('{}: {}'.format(key, args.__dict__.get(key)))
     print()
-    outer_cv = args.__dict__.get('outer_cv')
-    file = args.__dict__.get('import_ind')
+    outer_cv = args.outer_cv
+    file = args.import_ind
     if file is None:
         fold_ind = None
     else:
@@ -495,11 +506,12 @@ if __name__ == '__main__':
         ga.evolve()
         print(time() - ti)
     else:
-        folds = NCV.indices_for_ncv(outer_cv,'data/'+args.__dict__.get('dataset')+'sequence_based/aac.csv')
+        folds = NCV.indices_for_ncv(outer_cv,'data/'+args.dataset+'sequence_based/aac.csv')
         for i in range(outer_cv):
             ti = time()
             ga = GA(folds[i], **args.__dict__)
             ga.evolve()
+            print("Runtime in secs:")
             print(time()-ti)
     sys.exit(0)
 
